@@ -41,7 +41,7 @@ void SetupSQ( void )
     if (Global.SQ==NULL) exit(1) ;
     for ( i=0 ; i<Global.mm ; ++i ) {
         Global.SQ[i] = power(i+1);
-        if ( i < 10 ) printf("%d->%lld\n",i,Global.SQ[i]) ;
+        //if ( i < 10 ) printf("%d->%lld\n",i,Global.SQ[i]) ;
     }
 }
 
