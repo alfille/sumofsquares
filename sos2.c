@@ -42,11 +42,13 @@ void SetupSQ( void )
         Powers[i] = power(i);
     }
     Best = calloc( Global.nn+1, sizeof(Best[0]) );
-    First = calloc( Global.nn+1, sizeof(First[0]) );
+    if ( Global.count == 1 ) {
+        First = calloc( Global.nn+1, sizeof(First[0]) );
+        First[0] = 0 ;
+        First[1] = 1 ;
+    }
     Best[0] = 0 ;
-    First[0] = 0 ;
     Best[1] = 1;
-    First[1] = 1 ;
 }
 
 void TestNum( size_t N )
@@ -68,6 +70,24 @@ void TestNum( size_t N )
     }
     Best[N] = best ;
     First[N] = first ;
+}
+ 
+void TestNum_just_count( size_t N )
+{
+    size_t sq ;
+    int best = 1 + Best[N-1] ;
+    for (sq = 2; sq < Global.m ; ++sq ) {
+        ssize_t diff = N - Powers[sq] ;
+        if ( diff < 0 ) {
+            break ;
+        } else {
+            int try = 1 + Best[diff] ;
+            if ( try <= best ) {
+                best = try ;
+            }
+        }
+    }
+    Best[N] = best ;
 }
  
 void ShowTerms( size_t N )
@@ -187,8 +207,10 @@ int main( int argc, char * argv[] )
         printf("%8ld", (long int) i );
         TestNum( i ) ;
         if ( Global.count == 1 ) {
+            TestNum_just_count( i ) ;
             ShowCount( i ) ;
         } else {
+            TestNum( i ) ;
             ShowTerms( i ) ;
         }
     }
