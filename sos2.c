@@ -5,21 +5,22 @@
 
 // Program to find best sum of squares for all integers
 
-#define MAX_N 100 // max integer (squared)
+// Second version -- uses more space but o(N^1.5)
+
+#define MAX_N 1000 // max integer (squared)
 #define MAX_M MAX_N // max covering square
 
-#define MAX_DEPTH 10
-
 struct global {
-    long long int * SQ ;
     int n ;
     int m ;
     long long int nn ;
-    int depth ;
     int count ;
     int power ;
-} Global = { NULL, MAX_N, MAX_M, 0, MAX_DEPTH, 0, 2 } ;
+} Global = { MAX_N, MAX_M, 0, 0, 2 } ;
     
+size_t * Powers ;
+int * Best ; // Best solution for each residual
+size_t * First ; // First element of decomposition
 
 long long int power( int value )
 {
@@ -35,62 +36,56 @@ void SetupSQ( void )
 {
     int i;
     Global.nn = power(Global.n);
-    Global.SQ = calloc( Global.m, sizeof(Global.SQ[0]) ) ;
-    if (Global.SQ==NULL) exit(1) ;
-    for ( i=0 ; i<Global.m ; ++i ) {
-        Global.SQ[i] = power(i+1);
-        //if ( i < 10 ) printf("%d->%lld\n",i,Global.SQ[i]) ;
+    Powers = calloc( Global.m+1, sizeof(Powers[0]) ) ;
+    if (Powers==NULL) exit(1) ;
+    for ( i=0 ; i<Global.m+1 ; ++i ) {
+        Powers[i] = power(i);
     }
+    Best = calloc( Global.nn+1, sizeof(Best[0]) );
+    First = calloc( Global.nn+1, sizeof(First[0]) );
+    Best[0] = 0 ;
+    First[0] = 0 ;
+    Best[1] = 1;
+    First[1] = 1 ;
 }
 
-int small_decomp( long long int N, int lim, int depth_left, long long int * loc )
+void TestNum( size_t N )
 {
-    int i ;
-    long long int d;
-    //printf("\ndepth %d N %d  ",depth_left,N);
-    for (i=0 ; i<= lim ; ++i ) {
-        d = N - Global.SQ[i] ;
-        if (d<0) return -1 ;
-        if ( depth_left == 0 ) {
-            if ( d==0 ) {
-                loc[0] = i+1 ;
-                return 0 ;
-            }
+    size_t sq ;
+    int best = 1 + Best[N-1] ;
+    int first = 1 ;
+    for (sq = 2; sq < Global.m ; ++sq ) {
+        ssize_t diff = N - Powers[sq] ;
+        if ( diff < 0 ) {
+            break ;
         } else {
-            if ( d==0 ) return -1 ;
-            loc[0] = i+1 ;
-            if ( small_decomp( d, i, depth_left-1, loc+1 ) == 0 ) return 0 ;
-        }
-    }
-    return -1 ;
-}
-            
-
-int big_decomp( long long int N )
-{
-    int dp ;
-    long long int components[Global.depth] ;
-    
-    for ( dp = 0 ; dp < Global.depth ; ++dp ) {
-        //printf("\n Try Depth %d N=%d",dp,N);
-        if ( small_decomp( N, Global.m-1, dp, components ) == 0 ) {
-            if ( Global.count == 0 ) {
-                int j ;
-                for (j=0;j<=dp;++j) printf(",%8lld",components[j]) ;
-                printf("\n") ;
-            } else {
-                printf( ",%8d\n",dp+1);
+            int try = 1 + Best[diff] ;
+            if ( try <= best ) {
+                best = try ;
+                first = sq ;
             }
-            return 0 ;
         }
     }
-    if ( Global.count == 0 ) {
-        printf("\tGreater than %d components\n",Global.depth ) ;
-    } else {
-        printf( ", >%7d\n",Global.depth) ;
-    }
-    return -1 ;
+    Best[N] = best ;
+    First[N] = first ;
 }
+ 
+void ShowTerms( size_t N )
+{
+    size_t next = N ;
+    do {
+        size_t first = First[next] ;
+        printf( ",%8ld", (long int) first ) ;
+        next -= Powers[first] ;
+    } while ( next > 0 ) ;
+    printf("\n");
+}
+
+void ShowCount( size_t N )
+{
+    printf(",%8d\n", Best[N] ) ;
+}
+
 
 void usage( char * prog )
 {
@@ -99,7 +94,6 @@ void usage( char * prog )
     printf( "Usage %s number\n",prog);
     printf( "\tlook for sums up to <number> squared (default 100)\n");
     printf( "\t-m --max max_number used for squares\n");
-    printf( "\t-d --depth max number of squares summed (default 10)\n");
     printf( "\t-3 --cube look for cubed number sums\n" );
     printf( "\t-4 --fourth power sums\n");
     printf( "\t-5 --fifth power sums\n");
@@ -119,7 +113,6 @@ void commandline( int argc, char * argv[] )
     int long_index = 0 ; // dummy
     static struct option long_opts[] = {
         { "max", required_argument, 0, 'm' },
-        { "depth", required_argument, 0, 'd' } ,
         { "cube", no_argument, 0, '3' } ,
         { "fourth", no_argument, 0, '4' } ,
         { "fifth", no_argument, 0, '5' } ,
@@ -129,18 +122,11 @@ void commandline( int argc, char * argv[] )
         { "help", no_argument, 0, 'h' } ,
         { 0, 0, 0, 0, },
     } ;
-    while ( (opt=getopt_long(argc, argv, "m:d:p:3456ch", long_opts, &long_index)) != -1){
+    while ( (opt=getopt_long(argc, argv, "m:p:3456ch", long_opts, &long_index)) != -1){
         switch (opt) {
             case 'm':
 				if ( optarg != NULL ) {
 					 Global.m = atoi(optarg) ;
-				} else {
-					fprintf(stderr,"Option %c needs a following value -- ignoring\n",opt);
-				}
-                break ;
-            case 'd':
-				if ( optarg != NULL ) {
-					 Global.depth = atoi(optarg) ;
 				} else {
 					fprintf(stderr,"Option %c needs a following value -- ignoring\n",opt);
 				}
@@ -193,13 +179,18 @@ void commandline( int argc, char * argv[] )
 
 int main( int argc, char * argv[] )
 {
-    int i;
+    size_t i;
 
     commandline( argc, argv ) ;
     SetupSQ() ;
     for (i=1;i<Global.nn;++i) {
-        printf("%8d",i);
-        big_decomp( i ) ;
+        printf("%8ld", (long int) i );
+        TestNum( i ) ;
+        if ( Global.count == 1 ) {
+            ShowCount( i ) ;
+        } else {
+            ShowTerms( i ) ;
+        }
     }
     return 0 ;
     
