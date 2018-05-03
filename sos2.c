@@ -19,7 +19,7 @@ struct global {
 } Global = { MAX_N, MAX_M, 0, 0, 2 } ;
     
 size_t * Powers ;
-int * Best ; // Best solution for each residual
+uint16_t * Best ; // Best solution for each residual
 size_t * First ; // First element of decomposition
 
 long long int power( int value )
@@ -54,7 +54,7 @@ void SetupSQ( void )
 void TestNum( size_t N )
 {
     size_t sq ;
-    int best = 1 + Best[N-1] ;
+    uint16_t best = 1 + Best[N-1] ;
     int first = 1 ;
     for (sq = 2; sq < Global.m ; ++sq ) {
         ssize_t diff = N - Powers[sq] ;
@@ -75,7 +75,7 @@ void TestNum( size_t N )
 void TestNum_just_count( size_t N )
 {
     size_t sq ;
-    int best = 1 + Best[N-1] ;
+    uint16_t best = 1 + Best[N-1] ;
     for (sq = 2; sq < Global.m ; ++sq ) {
         ssize_t diff = N - Powers[sq] ;
         if ( diff < 0 ) {
@@ -131,6 +131,7 @@ void commandline( int argc, char * argv[] )
 
     int opt ;
     int long_index = 0 ; // dummy
+    int maxxed = 0 ;
     static struct option long_opts[] = {
         { "max", required_argument, 0, 'm' },
         { "cube", no_argument, 0, '3' } ,
@@ -147,6 +148,7 @@ void commandline( int argc, char * argv[] )
             case 'm':
 				if ( optarg != NULL ) {
 					 Global.m = atoi(optarg) ;
+                     maxxed = 1 ;
 				} else {
 					fprintf(stderr,"Option %c needs a following value -- ignoring\n",opt);
 				}
@@ -192,6 +194,9 @@ void commandline( int argc, char * argv[] )
     
     if ( optind < argc ) {
 		Global.n = atoi( argv[optind] ) ;
+        if ( maxxed == 0 ) {
+            Global.m = Global.n ;
+        }
 	}
 
 }
