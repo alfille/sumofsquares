@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <stdint.h>
 
 
 // Program to find best sum of squares for all integers
@@ -14,13 +15,16 @@ struct global {
     int n ;
     int m ;
     long long int nn ;
-    int count ;
+    enum {no_count, just_count, summary } count  ;
+    int summary ;
     int power ;
-} Global = { MAX_N, MAX_M, 0, 0, 2 } ;
+    int max_depth ;
+} Global = { MAX_N, MAX_M, 0, no_count, 2, 4 } ;
     
 size_t * Powers ;
 uint16_t * Best ; // Best solution for each residual
 size_t * First ; // First element of decomposition
+size_t * summaries ;
 
 long long int power( int value )
 {
@@ -42,10 +46,16 @@ void SetupSQ( void )
         Powers[i] = power(i);
     }
     Best = calloc( Global.nn+1, sizeof(Best[0]) );
-    if ( Global.count == 1 ) {
-        First = calloc( Global.nn+1, sizeof(First[0]) );
-        First[0] = 0 ;
-        First[1] = 1 ;
+    switch ( Global.count) {
+		case no_count:
+			First = calloc( Global.nn+1, sizeof(First[0]) );
+			First[0] = 0 ;
+			First[1] = 1 ;
+			break ;
+		case summary:
+			summaries = malloc( Global.max_depth * sizeof(summaries[0]) ) ;
+			break ;
+			
     }
     Best[0] = 0 ;
     Best[1] = 1;
@@ -71,7 +81,22 @@ void TestNum( size_t N )
     Best[N] = best ;
     First[N] = first ;
 }
- 
+
+void Summary_zero( void )
+{
+	int i ;
+	for (i = 0 ; i < Global.max_depth ; ++i ) {
+		summaries[i] = 0 ;
+	}
+}
+
+void Summary_add( int new_size )
+{
+	int old_max = Global.max_depth ;
+	Global.max_depth = new_size ;
+	summaries = realloc( summaries, new_size * sizeof( summaries[0] ) ) ;
+}
+
 void TestNum_just_count( size_t N )
 {
     size_t sq ;
@@ -120,6 +145,7 @@ void usage( char * prog )
     printf( "\t-6 --sixth power sums\n");
     printf( "\t-p --power up to 10th\n");
     printf( "\t-c --count number of terms rather than list them\n");
+    printf( "\t-d --summary of counts for each power interval\n");
     printf( "\t-h --help this summary\n") ;
     exit(0) ;
 }
@@ -140,10 +166,11 @@ void commandline( int argc, char * argv[] )
         { "sixth", no_argument, 0, '6' } ,
         { "count", no_argument, 0, 'c' } ,
         { "power", required_argument, 0, 'p' } ,
+        { "summary", no_argument, 0, 's' } ,
         { "help", no_argument, 0, 'h' } ,
         { 0, 0, 0, 0, },
     } ;
-    while ( (opt=getopt_long(argc, argv, "m:p:3456ch", long_opts, &long_index)) != -1){
+    while ( (opt=getopt_long(argc, argv, "m:p:3456csh", long_opts, &long_index)) != -1){
         switch (opt) {
             case 'm':
 				if ( optarg != NULL ) {
@@ -184,7 +211,10 @@ void commandline( int argc, char * argv[] )
                 usage(argv[0]);
                 exit(0);
             case 'c':
-                Global.count = 1 ;
+                Global.count = just_count ;
+                break ;
+            case 's':
+                Global.count = summary ;
                 break ;
             default:
                 usage(argv[0]) ;
@@ -211,12 +241,17 @@ int main( int argc, char * argv[] )
     for (i=1;i<Global.nn;++i) {
         printf("%8ld", (long int) i );
         TestNum( i ) ;
-        if ( Global.count == 1 ) {
+        switch (Global.count) {
+		case just_count:
             TestNum_just_count( i ) ;
             ShowCount( i ) ;
-        } else {
+            break ;
+        case no_count:
             TestNum( i ) ;
             ShowTerms( i ) ;
+            break ;
+        case summary:
+			break ;
         }
     }
     return 0 ;
