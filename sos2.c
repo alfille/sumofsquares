@@ -16,7 +16,6 @@ struct global {
     int m ;
     long long int nn ;
     enum {no_count, just_count, summary } count  ;
-    int summary ;
     int power ;
     int max_depth ;
 } Global = { MAX_N, MAX_M, 0, no_count, 2, 4 } ;
@@ -44,6 +43,7 @@ void SetupSQ( void )
     if (Powers==NULL) exit(1) ;
     for ( i=0 ; i<Global.m+1 ; ++i ) {
         Powers[i] = power(i);
+        //printf("%d->%d\n",i,(int)Powers[i]);
     }
     Best = calloc( Global.nn+1, sizeof(Best[0]) );
     switch ( Global.count) {
@@ -55,7 +55,8 @@ void SetupSQ( void )
 		case summary:
 			summaries = malloc( Global.max_depth * sizeof(summaries[0]) ) ;
 			break ;
-			
+        case just_count:
+            break ;
     }
     Best[0] = 0 ;
     Best[1] = 1;
@@ -66,7 +67,7 @@ void TestNum( size_t N )
     size_t sq ;
     uint16_t best = 1 + Best[N-1] ;
     int first = 1 ;
-    for (sq = 2; sq < Global.m ; ++sq ) {
+    for (sq = 2; sq <= Global.m ; ++sq ) {
         ssize_t diff = N - Powers[sq] ;
         if ( diff < 0 ) {
             break ;
@@ -93,15 +94,29 @@ void Summary_zero( void )
 void Summary_add( int new_size )
 {
 	int old_max = Global.max_depth ;
+    int i ;
+    
 	Global.max_depth = new_size ;
 	summaries = realloc( summaries, new_size * sizeof( summaries[0] ) ) ;
+    for (i=old_max ; i < new_size ; ++i ) {
+        summaries[i] = 0 ;
+    }
 }
 
+void Summary_show( void )
+{
+	int i ;
+	for (i = 0 ; i < Global.max_depth ; ++i ) {
+		printf( ",%8ld",summaries[i] ) ;
+	}
+    printf("\n");
+}
+    
 void TestNum_just_count( size_t N )
 {
     size_t sq ;
     uint16_t best = 1 + Best[N-1] ;
-    for (sq = 2; sq < Global.m ; ++sq ) {
+    for (sq = 2; sq <= Global.m ; ++sq ) {
         ssize_t diff = N - Powers[sq] ;
         if ( diff < 0 ) {
             break ;
@@ -113,6 +128,29 @@ void TestNum_just_count( size_t N )
         }
     }
     Best[N] = best ;
+}
+ 
+int TestNum_summary( size_t N )
+{
+    size_t sq ;
+    uint16_t best = 1 + Best[N-1] ;
+    for (sq = 2; sq <= Global.m ; ++sq ) {
+        ssize_t diff = N - Powers[sq] ;
+        if ( diff < 0 ) {
+            break ;
+        } else {
+            int try = 1 + Best[diff] ;
+            if ( try <= best ) {
+                best = try ;
+            }
+        }
+    }
+    Best[N] = best ;
+    if ( best > Global.max_depth ) {
+        Summary_add( best ) ;
+    }
+    ++ summaries[best-1];
+    return ( best == 1 ) ;
 }
  
 void ShowTerms( size_t N )
@@ -238,21 +276,32 @@ int main( int argc, char * argv[] )
 
     commandline( argc, argv ) ;
     SetupSQ() ;
-    for (i=1;i<Global.nn;++i) {
-        printf("%8ld", (long int) i );
-        TestNum( i ) ;
-        switch (Global.count) {
-		case just_count:
+
+    switch (Global.count) {
+    case just_count:
+        for (i=1;i<=Global.nn;++i) {
+            printf("%8ld", (long int) i );
             TestNum_just_count( i ) ;
             ShowCount( i ) ;
-            break ;
-        case no_count:
+        }
+        break ;
+    case no_count:
+        for (i=1;i<=Global.nn;++i) {
+            printf("%8ld", (long int) i );
             TestNum( i ) ;
             ShowTerms( i ) ;
-            break ;
-        case summary:
-			break ;
         }
+        break ;
+    case summary:
+    Summary_zero() ;
+        for (i=1;i<=Global.nn;++i) {
+            if ( TestNum_summary( i ) ) {
+                printf("%8ld", (long int) i );
+                Summary_show() ;
+                Summary_zero() ;
+            }
+        }
+        break ;
     }
     return 0 ;
     
