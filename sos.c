@@ -20,10 +20,13 @@ struct global {
     int max_depth ;
 } Global = { MAX_N, MAX_M, 0, no_count, 2, 4 } ;
     
+#define MAX_DECOMP 255 // fits in uint8_t
+    
 size_t * Powers ;
-uint16_t * Best ; // Best solution for each residual
+uint8_t * Best ; // Best solution for each residual
 size_t * First ; // First element of decomposition
-size_t * summaries ;
+//size_t summaries* ;
+size_t summaries[MAX_DECOMP+1] ;
 
 long long int power( int value )
 {
@@ -53,7 +56,7 @@ void SetupSQ( void )
 			First[1] = 1 ;
 			break ;
 		case summary:
-			summaries = malloc( Global.max_depth * sizeof(summaries[0]) ) ;
+			//summaries = malloc( Global.max_depth * sizeof(summaries[0]) ) ;
 			break ;
         case just_count:
             break ;
@@ -97,7 +100,7 @@ void Summary_add( int new_size )
     int i ;
     
 	Global.max_depth = new_size ;
-	summaries = realloc( summaries, new_size * sizeof( summaries[0] ) ) ;
+//	summaries = realloc( summaries, new_size * sizeof( summaries[0] ) ) ;
     for (i=old_max ; i < new_size ; ++i ) {
         summaries[i] = 0 ;
     }
@@ -130,10 +133,11 @@ void TestNum_just_count( size_t N )
     Best[N] = best ;
 }
  
-int TestNum_summary( size_t N )
+void TestNum_summary( size_t N )
 {
     size_t sq ;
     uint16_t best = 1 + Best[N-1] ;
+    static size_t generation = 0 ;
     for (sq = 2; sq <= Global.m ; ++sq ) {
         ssize_t diff = N - Powers[sq] ;
         if ( diff < 0 ) {
@@ -142,15 +146,22 @@ int TestNum_summary( size_t N )
             int try = 1 + Best[diff] ;
             if ( try <= best ) {
                 best = try ;
-            }
+            }            
         }
     }
     Best[N] = best ;
-    if ( best > Global.max_depth ) {
+    if ( best <= Global.max_depth ) {
+		++ summaries[best-1];
+		if ( best == 1 ) {
+            ++ generation ;
+            printf("%8d",generation) ;
+            Summary_show() ;
+            Summary_zero() ;
+		}		
+    } else {
         Summary_add( best ) ;
+		++ summaries[best-1];
     }
-    ++ summaries[best-1];
-    return ( best == 1 ) ;
 }
  
 void ShowTerms( size_t N )
@@ -293,13 +304,9 @@ int main( int argc, char * argv[] )
         }
         break ;
     case summary:
-    Summary_zero() ;
+		Summary_zero() ;
         for (i=1;i<=Global.nn;++i) {
-            if ( TestNum_summary( i ) ) {
-                printf("%8ld", (long int) i );
-                Summary_show() ;
-                Summary_zero() ;
-            }
+            TestNum_summary( i ) ;
         }
         break ;
     }
