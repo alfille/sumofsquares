@@ -137,3 +137,6 @@ look for sums up to &lt;number&gt; squared (default 100)
 <p>Integer Sequence<br>
 The Online Encyplopedia of Integer Sequences calls this <a href="http://oeis.org/search?q=1,2,3,1,2,3,4,2,1&amp;language=english&amp;go=Search">Lagrange’s Four Squares Theorem</a>.</p>
 
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTg2MTczNTEwMV19
+-->
