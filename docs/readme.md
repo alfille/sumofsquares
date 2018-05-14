@@ -1,3 +1,4 @@
+
 ---
 extensions:
   preset: ''
@@ -144,4 +145,9 @@ From the time of Legrange and Euler, many [proofs](http://www.maths.lancs.ac.uk/
 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbLTE3Mzc2NzY2MzQsMTgyMTQ0OTcxNV19
+-->
+
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbMTQ3MTYxNDUwNCwtMTczNzY3NjYzNCwxOD
+IxNDQ5NzE1XX0=
 -->
