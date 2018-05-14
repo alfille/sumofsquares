@@ -19,7 +19,7 @@ Four terms</p>
 Also 4 terms</p>
 <p>40 = 36 + 4 = 6<sup>2</sup> + 2<sup>2</sup><br>
 2 terms</p>
-<p>In fact, s that 4 terms is the maximum, although that’s hard to prove.<br>
+<p>In fact, it is known that 4 terms is the maximum. <br>
 <img src="https://github.com/alfille/sumofsquares/blob/master/images/Square_terms.png?raw=true" alt="enter image description here"><br>
 A note about the X axis in these graphs – each point is the interval between x<sup>2</sup> and (x+1)<sup>2</sup></p>
 <h2 id="installation">Installation</h2>
@@ -134,9 +134,13 @@ look for sums up to &lt;number&gt; squared (default 100)
 -s --summary of counts for each power interval
 -h --help this summary
 </code></pre>
-<p>Integer Sequence<br>
+<p>
+
+## Integer Sequence
+
+<br>
 The Online Encyplopedia of Integer Sequences calls this <a href="http://oeis.org/search?q=1,2,3,1,2,3,4,2,1&amp;language=english&amp;go=Search">Lagrange’s Four Squares Theorem</a>.</p>
 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEzODU0ODU3MjddfQ==
+eyJoaXN0b3J5IjpbLTEzODM3OTI3OTldfQ==
 -->
